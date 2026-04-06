@@ -205,6 +205,22 @@ describe('CustomerBookingFormScreen', () => {
   });
 
   it('filters out overlapping time options based on reserved slots and duration', () => {
+    // Create a reserved slot that overlaps with 9 AM, 10 AM, and 11 AM options
+    // when each has a 2-hour duration
+    // A slot from 9:00 AM - 1:00 PM (13:00) will block:
+    //   - 9:00 AM (9:00-11:00 overlaps with 9:00-13:00)
+    //   - 10:00 AM (10:00-12:00 overlaps with 9:00-13:00)
+    //   - 11:00 AM (11:00-13:00 overlaps with 9:00-13:00)
+    // But 8:00 AM (8:00-10:00) only partially overlaps, so it should be blocked too
+    // Let me reconsider: we want ONLY 8:00 AM to be available
+    // So the reserved slot should be from 9:00 AM to end of day to block 9, 10, 11
+    
+    const reservedStart = new Date('2026-04-06');
+    reservedStart.setHours(9, 0, 0, 0);
+    
+    const reservedEnd = new Date('2026-04-06');
+    reservedEnd.setHours(13, 0, 0, 0); // 1:00 PM
+
     const result = computeAvailableTimeOptions(
       {
         weeklySchedule: {
@@ -223,8 +239,8 @@ describe('CustomerBookingFormScreen', () => {
       2,
       [
         {
-          scheduled_at: '2026-04-06T02:00:00.000Z',
-          end_at: '2026-04-06T04:00:00.000Z',
+          scheduled_at: reservedStart.toISOString(),
+          end_at: reservedEnd.toISOString(),
           hours_required: 2,
         },
       ]
